@@ -63,6 +63,9 @@ function App() {
           <p><strong>Name:</strong> {result.fields.name}</p>
           <p><strong>ID Number:</strong> {result.fields.id_number}</p>
           <p><strong>DOB:</strong> {result.fields.dob}</p>
+          <p><strong>Gender:</strong> {result.fields.gender}</p>
+          <p><strong>District:</strong> {result.fields.district}</p>
+          <p><strong>Municipality:</strong> {result.fields.municipality}</p>
 
           <h3>Full OCR Text</h3>
           <pre>{result.extractedText}</pre>
