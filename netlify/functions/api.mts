@@ -1,0 +1,110 @@
+import type { Config } from "@netlify/functions";
+import { desc } from "drizzle-orm";
+import Tesseract from "tesseract.js";
+import { join } from "node:path";
+import { db } from "../../db/index.js";
+import { citizens } from "../../db/schema.js";
+
+type Fields = {
+  name: string;
+  id_number: string;
+  dob: string;
+  gender: string;
+  district: string;
+  municipality: string;
+};
+
+const json = (body: unknown, init?: ResponseInit) =>
+  Response.json(body, {
+    ...init,
+    headers: {
+      "Cache-Control": "no-store",
+      ...(init?.headers ?? {}),
+    },
+  });
+
+function extractFields(text: string): Fields {
+  const idMatch = text.match(/\b\d{6,}\b/);
+  const dobMatch = text.match(/\b\d{4}[-/]\d{2}[-/]\d{2}\b|\b\d{2}[-/]\d{2}[-/]\d{4}\b/);
+  const genderMatch = text.match(/\b(male|female|other)\b/i);
+  const districtMatch = text.match(/district\s*[:\-]?\s*([A-Za-z ]+)/i);
+  const municipalityMatch = text.match(/municipality\s*[:\-]?\s*([A-Za-z ]+)/i);
+
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  return {
+    name: lines[0] || "Not detected",
+    id_number: idMatch ? idMatch[0] : "Not detected",
+    dob: dobMatch ? dobMatch[0] : "Not detected",
+    gender: genderMatch ? genderMatch[1] : "Not detected",
+    district: districtMatch ? districtMatch[1].trim() : "Not detected",
+    municipality: municipalityMatch ? municipalityMatch[1].trim() : "Not detected",
+  };
+}
+
+async function extractId(req: Request) {
+  const form = await req.formData();
+  const file = form.get("idImage");
+
+  if (!(file instanceof File)) {
+    return json({ message: "Please upload an ID image." }, { status: 400 });
+  }
+
+  const image = Buffer.from(await file.arrayBuffer());
+  const result = await Tesseract.recognize(image, "eng", {
+    langPath: join(process.cwd(), "backend"),
+  });
+  const extractedText = result.data.text.trim();
+  const fields = extractFields(extractedText);
+
+  const [saved] = await db
+    .insert(citizens)
+    .values({
+      fullText: extractedText,
+      name: fields.name,
+      idNumber: fields.id_number,
+      dob: fields.dob,
+      gender: fields.gender,
+      district: fields.district,
+      municipality: fields.municipality,
+    })
+    .returning({ id: citizens.id });
+
+  return json({
+    message: "ID extracted and saved successfully",
+    databaseId: saved.id,
+    extractedText,
+    fields,
+  });
+}
+
+async function listCitizens() {
+  const rows = await db.select().from(citizens).orderBy(desc(citizens.id));
+  return json(rows);
+}
+
+export default async (req: Request) => {
+  const { pathname } = new URL(req.url);
+
+  try {
+    if (req.method === "POST" && pathname === "/api/extract-id") {
+      return await extractId(req);
+    }
+
+    if (req.method === "GET" && pathname === "/api/citizens") {
+      return await listCitizens();
+    }
+
+    return json({ message: "Not found" }, { status: 404 });
+  } catch (error) {
+    console.error(error);
+    return json({ message: "OCR extraction failed" }, { status: 500 });
+  }
+};
+
+export const config: Config = {
+  path: "/api/*",
+};

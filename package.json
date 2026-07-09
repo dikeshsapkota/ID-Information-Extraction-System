@@ -1,0 +1,20 @@
+{
+  "name": "id-extraction-netlify",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm --prefix Frontend install && npm --prefix Frontend run build",
+    "dev": "netlify dev --port 8889",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@netlify/database": "^1.1.0",
+    "drizzle-orm": "beta",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^4.3.0",
+    "drizzle-kit": "beta",
+    "typescript": "^5.9.3"
+  }
+}

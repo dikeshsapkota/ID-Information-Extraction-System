@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = "Frontend/dist"
+
+[functions]
+  directory = "netlify/functions"
+  included_files = ["backend/eng.traineddata"]
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
