@@ -21,7 +21,15 @@ function App() {
     try {
       setLoading(true);
 
-      const res = await axios.post("/api/extract-id", formData);
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/extract-id`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       setResult(res.data);
     } catch (error) {
