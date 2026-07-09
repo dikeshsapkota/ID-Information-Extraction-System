@@ -2,10 +2,15 @@ import { useState } from "react";
 import axios from "axios";
 import "./App.css";
 
+const API_URL =
+  import.meta.env.VITE_API_URL?.replace(/\/$/, "") ||
+  (import.meta.env.DEV ? "http://localhost:5000" : "");
+
 function App() {
   const [image, setImage] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -17,12 +22,19 @@ function App() {
 
     const formData = new FormData();
     formData.append("idImage", image);
+    setErrorMessage("");
 
     try {
+      if (!API_URL) {
+        throw new Error(
+          "Missing VITE_API_URL. Add your Render backend URL in Netlify environment variables and redeploy."
+        );
+      }
+
       setLoading(true);
 
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/extract-id`,
+        `${API_URL}/api/extract-id`,
         formData,
         {
           headers: {
@@ -33,7 +45,14 @@ function App() {
 
       setResult(res.data);
     } catch (error) {
-      alert("Something went wrong");
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Something went wrong";
+
+      setErrorMessage(message);
+      alert(message);
       console.log(error);
     } finally {
       setLoading(false);
@@ -55,6 +74,8 @@ function App() {
           {loading ? "Extracting..." : "Upload & Extract"}
         </button>
       </form>
+
+      {errorMessage && <p className="error">{errorMessage}</p>}
 
       {result && (
         <div className="result">

@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
+const fs = require("fs");
 const multer = require("multer");
+const path = require("path");
 const Tesseract = require("tesseract.js");
 const db = require("./database");
 require("dotenv").config();
@@ -10,7 +12,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const upload = multer({ dest: "uploads/" });
+const uploadDir = path.join(__dirname, "uploads");
+fs.mkdirSync(uploadDir, { recursive: true });
+
+const upload = multer({
+  dest: uploadDir,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
 
 app.get("/", (req, res) => {
   res.send("Backend is running");
@@ -70,12 +80,14 @@ function extractFields(text) {
 }
 
 app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
+  let imagePath;
+
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No image uploaded" });
     }
 
-    const imagePath = req.file.path;
+    imagePath = req.file.path;
 
     const result = await Tesseract.recognize(imagePath, "eng");
     const fullText = result.data.text;
@@ -116,7 +128,24 @@ app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
       message: "OCR extraction failed",
       error: error.message,
     });
+  } finally {
+    if (imagePath) {
+      fs.promises.unlink(imagePath).catch(() => {});
+    }
   }
+});
+
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    return res.status(400).json({
+      message:
+        error.code === "LIMIT_FILE_SIZE"
+          ? "Image is too large. Please upload an image under 5MB."
+          : error.message,
+    });
+  }
+
+  return next(error);
 });
 
 app.get("/api/citizens", (req, res) => {
