@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: id-information-extraction-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    plan: free
+    autoDeployTrigger: commit
