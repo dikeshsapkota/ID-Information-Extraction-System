@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const Tesseract = require("tesseract.js");
-const connectDB = require("./database");
+const db = require("./database");
 require("dotenv").config();
 
 const app = express();
@@ -11,6 +11,10 @@ app.use(cors());
 app.use(express.json());
 
 const upload = multer({ dest: "uploads/" });
+
+app.get("/", (req, res) => {
+  res.send("Backend is running");
+});
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
@@ -30,7 +34,6 @@ function extractFields(text) {
 
   if (fullNameIndex !== -1) {
     const afterFullName = cleanText.slice(fullNameIndex, fullNameIndex + 80);
-
     const possibleName = afterFullName.match(/[A-Z]{4,}\s*[A-Z]{4,}/);
 
     if (possibleName) {
@@ -47,11 +50,12 @@ function extractFields(text) {
   const dayMatch = cleanText.match(/Day\s*([0-9]+)/i);
 
   if (yearMatch && monthMatch) {
-    dob = `${yearMatch[1]}-${monthMatch[1]}-${dayMatch ? dayMatch[1] : "Not detected"}`;
+    dob = `${yearMatch[1]}-${monthMatch[1]}-${
+      dayMatch ? dayMatch[1] : "Not detected"
+    }`;
   }
 
   const genderMatch = cleanText.match(/Sex\s*([A-Za-z]+)/i);
-
   const districtMatch = cleanText.match(/District\s*([A-Za-z]+)/i);
   const municipalityMatch = cleanText.match(/Municipality\s*([A-Za-z]+)/i);
 
@@ -78,10 +82,8 @@ app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
 
     const fields = extractFields(fullText);
 
-    const db = await connectDB();
-
-    const saveResult = await db.run(
-      `INSERT INTO citizens (
+    const stmt = db.prepare(`
+      INSERT INTO citizens (
         full_text,
         name,
         id_number,
@@ -89,21 +91,22 @@ app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
         gender,
         district,
         municipality
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        fullText,
-        fields.name,
-        fields.id_number,
-        fields.dob,
-        fields.gender,
-        fields.district,
-        fields.municipality,
-      ]
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const saveResult = stmt.run(
+      fullText,
+      fields.name,
+      fields.id_number,
+      fields.dob,
+      fields.gender,
+      fields.district,
+      fields.municipality
     );
 
     res.json({
       message: "ID extracted and saved successfully",
-      databaseId: saveResult.lastID,
+      databaseId: saveResult.lastInsertRowid,
       extractedText: fullText,
       fields,
     });
@@ -116,10 +119,9 @@ app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
   }
 });
 
-app.get("/api/citizens", async (req, res) => {
+app.get("/api/citizens", (req, res) => {
   try {
-    const db = await connectDB();
-    const rows = await db.all("SELECT * FROM citizens ORDER BY id DESC");
+    const rows = db.prepare("SELECT * FROM citizens ORDER BY id DESC").all();
     res.json(rows);
   } catch (error) {
     res.status(500).json({
