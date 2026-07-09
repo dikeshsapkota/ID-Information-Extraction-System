@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import "./App.css";
+import nepalEmblem from "./images/Emblem_of_Nepal.svg";
 
 const API_URL =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") ||
@@ -60,39 +61,57 @@ function App() {
   };
 
   return (
-    <div className="container">
-      <h1>AI ID Information Extraction System</h1>
+    <main className="page-shell">
+      <section className="government-panel">
+        <header className="official-header">
+          <img
+            className="government-logo"
+            src={nepalEmblem}
+            alt="Government of Nepal emblem"
+          />
+          <div className="header-copy">
+            <p className="kicker">Government of Nepal</p>
+            <h1>National ID Information Extraction</h1>
+            <p className="subtitle">Digital citizen record processing portal</p>
+          </div>
+        </header>
 
-      <form onSubmit={handleUpload}>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setImage(e.target.files[0])}
-        />
+        <form className="upload-form" onSubmit={handleUpload}>
+          <label className="file-control">
+            <span>ID document image</span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImage(e.target.files[0])}
+            />
+          </label>
 
-        <button type="submit">
-          {loading ? "Extracting..." : "Upload & Extract"}
-        </button>
-      </form>
+          <button type="submit" disabled={loading}>
+            {loading ? "Extracting..." : "Upload & Extract"}
+          </button>
+        </form>
 
-      {errorMessage && <p className="error">{errorMessage}</p>}
+        {errorMessage && <p className="error">{errorMessage}</p>}
 
-      {result && (
-        <div className="result">
-          <h2>Extracted Details</h2>
+        {result && (
+          <section className="result">
+            <h2>Extracted Details</h2>
 
-          <p><strong>Name:</strong> {result.fields.name}</p>
-          <p><strong>ID Number:</strong> {result.fields.id_number}</p>
-          <p><strong>DOB:</strong> {result.fields.dob}</p>
-          <p><strong>Gender:</strong> {result.fields.gender}</p>
-          <p><strong>District:</strong> {result.fields.district}</p>
-          <p><strong>Municipality:</strong> {result.fields.municipality}</p>
+            <div className="details-grid">
+              <p><strong>Name</strong><span>{result.fields.name}</span></p>
+              <p><strong>ID Number</strong><span>{result.fields.id_number}</span></p>
+              <p><strong>DOB</strong><span>{result.fields.dob}</span></p>
+              <p><strong>Gender</strong><span>{result.fields.gender}</span></p>
+              <p><strong>District</strong><span>{result.fields.district}</span></p>
+              <p><strong>Municipality</strong><span>{result.fields.municipality}</span></p>
+            </div>
 
-          <h3>Full OCR Text</h3>
-          <pre>{result.extractedText}</pre>
-        </div>
-      )}
-    </div>
+            <h3>Full OCR Text</h3>
+            <pre>{result.extractedText}</pre>
+          </section>
+        )}
+      </section>
+    </main>
   );
 }
 

@@ -11,19 +11,11 @@
 body {
   margin: 0;
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #eef2ff;
+  background: #eef2f7;
 }
 
-.app-container {
-  padding: 2rem;
-  border-radius: 1rem;
-  background: white;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
-  max-width: 42rem;
-  width: min(100%, 42rem);
+#root {
+  min-height: 100vh;
 }
 
 code {
