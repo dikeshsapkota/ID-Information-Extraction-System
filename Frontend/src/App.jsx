@@ -22,7 +22,7 @@ function App() {
       setLoading(true);
 
       const res = await axios.post(
-        "http://localhost:5000/api/extract-id",
+        `${import.meta.env.VITE_API_URL}/api/extract-id`,
         formData,
         {
           headers: {
