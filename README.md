@@ -17,6 +17,7 @@ This project demonstrates full-stack web development, REST API integration, OCR 
 ![AI Government ID Information Extraction System sample interface](docs/images/sample-frontend.png)
 
 ---
+## livedemo:https://ai-id-extraction-system.netlify.app/
 
 ## Features
 
