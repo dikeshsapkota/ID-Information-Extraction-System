@@ -7,10 +7,21 @@ const API_URL =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") ||
   (import.meta.env.DEV ? "http://localhost:5000" : "");
 
+const FIELD_LABELS = {
+  name: "Name",
+  id_number: "Citizenship Number",
+  dob: "Date of Birth",
+  gender: "Gender",
+  district: "District",
+  municipality: "Municipality",
+};
+
 function App() {
   const [image, setImage] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedId, setSavedId] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleUpload = async (e) => {
@@ -24,6 +35,7 @@ function App() {
     const formData = new FormData();
     formData.append("idImage", image);
     setErrorMessage("");
+    setSavedId(null);
 
     try {
       if (!API_URL) {
@@ -57,6 +69,33 @@ function App() {
       console.log(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFieldChange = (field, value) => {
+    setResult((current) => ({
+      ...current,
+      fields: { ...current.fields, [field]: value },
+    }));
+    setSavedId(null);
+  };
+
+  const handleSave = async () => {
+    setErrorMessage("");
+    setSaving(true);
+
+    try {
+      const res = await axios.post(`${API_URL}/api/citizens`, {
+        extractedText: result.extractedText,
+        fields: result.fields,
+      });
+      setSavedId(res.data.databaseId);
+    } catch (error) {
+      setErrorMessage(
+        error.response?.data?.message || error.message || "Unable to save record"
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -95,16 +134,33 @@ function App() {
 
         {result && (
           <section className="result">
-            <h2>Extracted Details</h2>
+            <h2>Review Extracted Details</h2>
+            <p className="review-note">
+              Verify and edit every field before saving the citizen record.
+            </p>
 
             <div className="details-grid">
-              <p><strong>Name</strong><span>{result.fields.name}</span></p>
-              <p><strong>ID Number</strong><span>{result.fields.id_number}</span></p>
-              <p><strong>DOB</strong><span>{result.fields.dob}</span></p>
-              <p><strong>Gender</strong><span>{result.fields.gender}</span></p>
-              <p><strong>District</strong><span>{result.fields.district}</span></p>
-              <p><strong>Municipality</strong><span>{result.fields.municipality}</span></p>
+              {Object.entries(FIELD_LABELS).map(([field, label]) => (
+                <label key={field}>
+                  <strong>{label}</strong>
+                  <input
+                    type="text"
+                    value={result.fields[field]}
+                    onChange={(event) =>
+                      handleFieldChange(field, event.target.value)
+                    }
+                  />
+                </label>
+              ))}
             </div>
+
+            <button type="button" onClick={handleSave} disabled={saving}>
+              {saving ? "Saving..." : "Confirm & Save"}
+            </button>
+
+            {savedId && (
+              <p className="success">Record saved with database ID {savedId}.</p>
+            )}
 
             <h3>Full OCR Text</h3>
             <pre>{result.extractedText}</pre>
