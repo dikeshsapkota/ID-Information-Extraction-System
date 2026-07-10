@@ -3,6 +3,7 @@ const cors = require("cors");
 const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
+const sharp = require("sharp");
 const Tesseract = require("tesseract.js");
 const db = require("./database");
 require("dotenv").config();
@@ -81,6 +82,7 @@ function extractFields(text) {
 
 app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
   let imagePath;
+  let processedImage;
 
   try {
     if (!req.file) {
@@ -88,8 +90,21 @@ app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
     }
 
     imagePath = req.file.path;
+    processedImage = path.join(uploadDir, `${req.file.filename}-processed.png`);
 
-    const result = await Tesseract.recognize(imagePath, "eng");
+    await sharp(imagePath)
+      .grayscale()
+      .normalize()
+      .sharpen()
+      .threshold(160)
+      .toFile(processedImage);
+
+    const result = await Tesseract.recognize(processedImage, "eng", {
+      logger: (message) => console.log(message),
+      tessedit_pageseg_mode: 6,
+      preserve_interword_spaces: 1,
+    });
+
     const fullText = result.data.text;
 
     const fields = extractFields(fullText);
@@ -129,9 +144,10 @@ app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
       error: error.message,
     });
   } finally {
-    if (imagePath) {
-      fs.promises.unlink(imagePath).catch(() => {});
-    }
+    const filesToDelete = [imagePath, processedImage].filter(Boolean);
+    await Promise.all(
+      filesToDelete.map((file) => fs.promises.unlink(file).catch(() => {}))
+    );
   }
 });
 
