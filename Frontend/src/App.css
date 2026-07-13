@@ -216,6 +216,15 @@ button:disabled {
   font-weight: 700;
 }
 
+.warning {
+  margin: 0 0 18px;
+  border-left: 4px solid #a16207;
+  background: #fefce8;
+  color: #854d0e;
+  padding: 12px 14px;
+  font-weight: 700;
+}
+
 pre {
   margin-top: 0;
   max-height: 320px;

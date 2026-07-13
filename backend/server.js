@@ -47,6 +47,7 @@ app.get("/api/health", (req, res) => {
 app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
   let imagePath;
   let processedImage;
+  let stage = "upload validation";
 
   try {
     if (!req.file) {
@@ -56,8 +57,11 @@ app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
     imagePath = req.file.path;
     processedImage = path.join(uploadDir, `${req.file.filename}-processed.png`);
 
+    stage = "image preprocessing";
     await preprocessImage(imagePath, processedImage);
+    stage = "text recognition";
     const fullText = await recognizeText(processedImage);
+    stage = "field extraction";
     const extraction = await extractNepaliIdFields(
       fullText,
       imagePath,
@@ -69,11 +73,14 @@ app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
       extractedText: fullText,
       documentType: extraction.document_type,
       fields: extraction.fields,
+      extractionMethod: extraction.extraction_method,
+      warning: extraction.warning,
     });
   } catch (error) {
-    console.error("OCR error:", error);
+    console.error(`${stage} error:`, error);
     res.status(500).json({
-      message: "OCR extraction failed",
+      message: `ID ${stage} failed`,
+      stage,
       error: error.message,
     });
   } finally {

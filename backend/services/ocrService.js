@@ -25,7 +25,9 @@ async function recognizeText(imagePath) {
     process.env.OCR_LANGUAGES || "eng+nep",
     1,
     {
-      logger: (message) => console.log(message),
+      logger: (message) => {
+        if (process.env.OCR_DEBUG === "true") console.log(message);
+      },
     }
   );
 
@@ -36,8 +38,24 @@ async function recognizeText(imagePath) {
       user_defined_dpi: "300",
     });
 
-    const result = await worker.recognize(imagePath, { rotateAuto: true });
-    return cleanOcrText(result.data.text);
+    const automatic = await worker.recognize(imagePath, { rotateAuto: true });
+    const candidates = [automatic.data];
+
+    if (automatic.data.confidence < 50) {
+      const clockwise = await worker.recognize(imagePath, {
+        rotateRadians: Math.PI / 2,
+      });
+      const counterclockwise = await worker.recognize(imagePath, {
+        rotateRadians: -Math.PI / 2,
+      });
+      candidates.push(clockwise.data, counterclockwise.data);
+    }
+
+    const best = candidates.reduce((current, candidate) =>
+      candidate.confidence > current.confidence ? candidate : current
+    );
+
+    return cleanOcrText(best.text);
   } finally {
     await worker.terminate();
   }

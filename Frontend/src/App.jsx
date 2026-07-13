@@ -147,6 +147,7 @@ function App() {
             <p className="review-note">
               Verify and edit every field before saving the citizen record.
             </p>
+            {result.warning && <p className="warning">{result.warning}</p>}
 
             <div className="details-grid">
               {Object.entries(FIELD_LABELS).map(([field, label]) => (
