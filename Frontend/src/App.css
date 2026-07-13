@@ -147,6 +147,23 @@ button:disabled {
   margin: 0;
 }
 
+.signed-out-panel {
+  grid-template-columns: minmax(240px, 1fr) auto;
+}
+
+.auth-status,
+.configuration-error {
+  padding: 42px 30px;
+  color: #526371;
+  text-align: center;
+}
+
+.configuration-error {
+  min-height: 100vh;
+  background: #e9eef3;
+  font-weight: 800;
+}
+
 .workspace-nav {
   display: flex;
   align-items: center;
@@ -171,6 +188,23 @@ button:disabled {
 .lock-button,
 .secondary-button {
   box-shadow: none;
+}
+
+.account-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.account-name {
+  max-width: 220px;
+  overflow: hidden;
+  color: #40586a;
+  font-size: 0.84rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tab-button {
@@ -484,6 +518,10 @@ pre {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .signed-out-panel {
+    grid-template-columns: 1fr;
+  }
+
   .access-panel > div,
   .access-error {
     grid-column: 1 / -1;
@@ -534,6 +572,10 @@ pre {
   .workspace-nav {
     align-items: stretch;
     padding: 10px 17px;
+  }
+
+  .account-name {
+    display: none;
   }
 
   .view-tabs {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 import axios from "axios";
 import "./App.css";
 import nepalEmblem from "./images/Emblem_of_Nepal.svg";
@@ -9,7 +10,7 @@ const API_URL =
 
 const FIELD_LABELS = {
   name: "Name",
-  id_number: "Citizenship Number",
+  id_number: "Document Number",
   dob: "Date of Birth",
   gender: "Gender",
   district: "District",
@@ -23,10 +24,14 @@ const DOCUMENT_LABELS = {
 };
 
 function App() {
-  const [accessKeyInput, setAccessKeyInput] = useState("");
-  const [accessKey, setAccessKey] = useState("");
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authError, setAuthError] = useState("");
+  const {
+    getAccessTokenSilently,
+    isAuthenticated,
+    isLoading: authLoading,
+    loginWithRedirect,
+    logout,
+    user,
+  } = useAuth0();
   const [activeView, setActiveView] = useState("extract");
   const [image, setImage] = useState(null);
   const [result, setResult] = useState(null);
@@ -47,55 +52,21 @@ function App() {
         ? "Cannot reach the server. Wait a moment and try again."
         : error.message || fallback);
 
-  const authorization = (key = accessKey) => ({
-    Authorization: `Bearer ${key}`,
+  const authorization = async () => ({
+    Authorization: `Bearer ${await getAccessTokenSilently()}`,
   });
-
-  const handleUnlock = async (event) => {
-    event.preventDefault();
-    const candidateKey = accessKeyInput.trim();
-    if (!candidateKey) {
-      setAuthError("Enter the portal access key.");
-      return;
-    }
-
-    setAuthLoading(true);
-    setAuthError("");
-    try {
-      const response = await axios.get(`${API_URL}/api/citizens`, {
-        headers: authorization(candidateKey),
-        timeout: 30000,
-      });
-      setAccessKey(candidateKey);
-      setAccessKeyInput("");
-      setCitizens(response.data);
-    } catch (error) {
-      setAuthError(getErrorMessage(error, "Unable to unlock the portal"));
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleLock = () => {
-    setAccessKey("");
-    setAccessKeyInput("");
-    setCitizens([]);
-    setResult(null);
-    setActiveView("extract");
-  };
 
   const loadCitizens = async () => {
     setRecordsLoading(true);
     setRecordsError("");
     try {
       const response = await axios.get(`${API_URL}/api/citizens`, {
-        headers: authorization(),
+        headers: await authorization(),
         timeout: 30000,
       });
       setCitizens(response.data);
     } catch (error) {
       setRecordsError(getErrorMessage(error, "Unable to load saved records"));
-      if (error.response?.status === 401) handleLock();
     } finally {
       setRecordsLoading(false);
     }
@@ -114,11 +85,10 @@ function App() {
     return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
   };
 
-  const handleUpload = async (e) => {
-    e.preventDefault();
-
+  const handleUpload = async (event) => {
+    event.preventDefault();
     if (!image) {
-      alert("Please choose ID image first");
+      setErrorMessage("Choose an ID image first.");
       return;
     }
 
@@ -126,31 +96,16 @@ function App() {
     formData.append("idImage", image);
     setErrorMessage("");
     setSavedId(null);
+    setLoading(true);
 
     try {
-      if (!API_URL) {
-        throw new Error(
-          "Missing VITE_API_URL. Add your Render backend URL in Netlify environment variables and redeploy."
-        );
-      }
-
-      setLoading(true);
-
-      const res = await axios.post(
-        `${API_URL}/api/extract-id`,
-        formData,
-        {
-          headers: authorization(),
-          timeout: 120000,
-        }
-      );
-
-      setResult(res.data);
+      const response = await axios.post(`${API_URL}/api/extract-id`, formData, {
+        headers: await authorization(),
+        timeout: 120000,
+      });
+      setResult(response.data);
     } catch (error) {
-      const message = getErrorMessage(error, "Something went wrong");
-
-      setErrorMessage(message);
-      if (error.response?.status === 401) handleLock();
+      setErrorMessage(getErrorMessage(error, "Unable to extract this document"));
     } finally {
       setLoading(false);
     }
@@ -167,22 +122,28 @@ function App() {
   const handleSave = async () => {
     setErrorMessage("");
     setSaving(true);
-
     try {
-      const res = await axios.post(`${API_URL}/api/citizens`, {
-        extractedText: result.extractedText,
-        fields: result.fields,
-      }, {
-        headers: authorization(),
-      });
-      setSavedId(res.data.databaseId);
+      const response = await axios.post(
+        `${API_URL}/api/citizens`,
+        {
+          extractedText: result.extractedText,
+          fields: result.fields,
+        },
+        { headers: await authorization() }
+      );
+      setSavedId(response.data.databaseId);
       await loadCitizens();
     } catch (error) {
       setErrorMessage(getErrorMessage(error, "Unable to save record"));
-      if (error.response?.status === 401) handleLock();
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleLogout = () => {
+    setCitizens([]);
+    setResult(null);
+    logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
   return (
@@ -201,26 +162,18 @@ function App() {
           </div>
         </header>
 
-        {!accessKey ? (
-          <form className="access-panel" onSubmit={handleUnlock}>
+        {authLoading ? (
+          <div className="auth-status">Checking sign-in status...</div>
+        ) : !isAuthenticated ? (
+          <section className="access-panel signed-out-panel">
             <div>
               <h2>Secure Portal Access</h2>
-              <p>Enter the server access key to continue.</p>
+              <p>Sign in to extract documents and access your saved records.</p>
             </div>
-            <label className="access-control">
-              <span>Access key</span>
-              <input
-                type="password"
-                autoComplete="current-password"
-                value={accessKeyInput}
-                onChange={(event) => setAccessKeyInput(event.target.value)}
-              />
-            </label>
-            <button type="submit" disabled={authLoading}>
-              {authLoading ? "Checking..." : "Unlock Portal"}
+            <button type="button" onClick={() => loginWithRedirect()}>
+              Sign In or Create Account
             </button>
-            {authError && <p className="error access-error">{authError}</p>}
-          </form>
+          </section>
         ) : (
           <>
             <nav className="workspace-nav" aria-label="Portal sections">
@@ -245,66 +198,69 @@ function App() {
                   <span className="record-count">{citizens.length}</span>
                 </button>
               </div>
-              <button className="lock-button" type="button" onClick={handleLock}>
-                Lock
-              </button>
+              <div className="account-actions">
+                <span className="account-name">{user?.name || user?.email}</span>
+                <button className="lock-button" type="button" onClick={handleLogout}>
+                  Sign Out
+                </button>
+              </div>
             </nav>
 
             {activeView === "extract" && (
               <>
                 <form className="upload-form" onSubmit={handleUpload}>
-          <label className="file-control">
-            <span>ID document image</span>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => setImage(e.target.files[0])}
-            />
-          </label>
-
-          <button type="submit" disabled={loading}>
-            {loading ? "Extracting..." : "Upload & Extract"}
-          </button>
+                  <label className="file-control">
+                    <span>ID document image</span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(event) => setImage(event.target.files[0])}
+                    />
+                  </label>
+                  <button type="submit" disabled={loading}>
+                    {loading ? "Extracting..." : "Upload & Extract"}
+                  </button>
                 </form>
 
                 {errorMessage && <p className="error">{errorMessage}</p>}
 
                 {result && (
                   <section className="result">
-            <h2>Review Extracted Details</h2>
-            <p className="document-type">
-              {DOCUMENT_LABELS[result.documentType] || DOCUMENT_LABELS.unknown}
-            </p>
-            <p className="review-note">
-              Verify and edit every field before saving the citizen record.
-            </p>
-            {result.warning && <p className="warning">{result.warning}</p>}
+                    <h2>Review Extracted Details</h2>
+                    <p className="document-type">
+                      {DOCUMENT_LABELS[result.documentType] || DOCUMENT_LABELS.unknown}
+                    </p>
+                    <p className="review-note">
+                      Verify and edit every field before saving the citizen record.
+                    </p>
+                    {result.warning && <p className="warning">{result.warning}</p>}
 
-            <div className="details-grid">
-              {Object.entries(FIELD_LABELS).map(([field, label]) => (
-                <label key={field}>
-                  <strong>{label}</strong>
-                  <input
-                    type="text"
-                    value={result.fields[field]}
-                    onChange={(event) =>
-                      handleFieldChange(field, event.target.value)
-                    }
-                  />
-                </label>
-              ))}
-            </div>
+                    <div className="details-grid">
+                      {Object.entries(FIELD_LABELS).map(([field, label]) => (
+                        <label key={field}>
+                          <strong>{label}</strong>
+                          <input
+                            type="text"
+                            value={result.fields[field]}
+                            onChange={(event) =>
+                              handleFieldChange(field, event.target.value)
+                            }
+                          />
+                        </label>
+                      ))}
+                    </div>
 
-            <button type="button" onClick={handleSave} disabled={saving}>
-              {saving ? "Saving..." : "Confirm & Save"}
-            </button>
+                    <button type="button" onClick={handleSave} disabled={saving}>
+                      {saving ? "Saving..." : "Confirm & Save"}
+                    </button>
+                    {savedId && (
+                      <p className="success">
+                        Record saved with database ID {savedId}.
+                      </p>
+                    )}
 
-            {savedId && (
-              <p className="success">Record saved with database ID {savedId}.</p>
-            )}
-
-            <h3>Full OCR Text</h3>
-            <pre>{result.extractedText}</pre>
+                    <h3>Full OCR Text</h3>
+                    <pre>{result.extractedText}</pre>
                   </section>
                 )}
               </>
@@ -314,7 +270,7 @@ function App() {
               <section className="records-view">
                 <div className="section-heading">
                   <div>
-                    <p className="section-kicker">Citizen database</p>
+                    <p className="section-kicker">Your citizen database</p>
                     <h2>Saved Records</h2>
                   </div>
                   <button

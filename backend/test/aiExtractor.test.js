@@ -4,13 +4,33 @@ const {
   extractFieldsFromOcr,
   extractNepaliIdFields,
 } = require("../services/aiExtractor");
-const { keysMatch } = require("../services/accessControl");
+const { keysMatch, requireAccess } = require("../services/accessControl");
 
 test("compares access keys without accepting missing values", () => {
   assert.equal(keysMatch("correct horse battery staple", "correct horse battery staple"), true);
   assert.equal(keysMatch("wrong", "correct horse battery staple"), false);
   assert.equal(keysMatch("", "correct horse battery staple"), false);
   assert.equal(keysMatch("correct horse battery staple", ""), false);
+});
+
+test("marks a valid runtime access key as an admin principal", () => {
+  const previousKey = process.env.ADMIN_ACCESS_KEY;
+  process.env.ADMIN_ACCESS_KEY = "test-admin-access-key";
+  const req = {
+    get: () => "Bearer test-admin-access-key",
+  };
+  let nextCalled = false;
+
+  try {
+    requireAccess(req, {}, () => {
+      nextCalled = true;
+    });
+    assert.equal(nextCalled, true);
+    assert.deepEqual(req.access, { isAdmin: true, userId: "legacy-admin" });
+  } finally {
+    if (previousKey === undefined) delete process.env.ADMIN_ACCESS_KEY;
+    else process.env.ADMIN_ACCESS_KEY = previousKey;
+  }
 });
 
 test("extracts citizenship fields from English OCR labels", () => {

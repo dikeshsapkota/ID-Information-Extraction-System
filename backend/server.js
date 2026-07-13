@@ -100,7 +100,7 @@ app.post("/api/citizens", requireAccess, (req, res) => {
       return res.status(400).json({ message: "Extracted text and fields are required" });
     }
 
-    const saveResult = saveCitizen(extractedText, fields);
+    const saveResult = saveCitizen(extractedText, fields, req.access.userId);
     return res.status(201).json({
       message: "Reviewed citizen record saved successfully",
       databaseId: saveResult.lastInsertRowid,
@@ -132,7 +132,7 @@ app.use((error, req, res, next) => {
 
 app.get("/api/citizens", requireAccess, (req, res) => {
   try {
-    const rows = listCitizens();
+    const rows = listCitizens(req.access.userId, req.access.isAdmin);
     res.json(rows);
   } catch (error) {
     res.status(500).json({
