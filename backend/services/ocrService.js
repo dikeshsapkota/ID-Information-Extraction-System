@@ -45,10 +45,14 @@ async function recognizeText(imagePath) {
       const clockwise = await worker.recognize(imagePath, {
         rotateRadians: Math.PI / 2,
       });
-      const counterclockwise = await worker.recognize(imagePath, {
-        rotateRadians: -Math.PI / 2,
-      });
-      candidates.push(clockwise.data, counterclockwise.data);
+      candidates.push(clockwise.data);
+
+      if (clockwise.data.confidence < 50) {
+        const counterclockwise = await worker.recognize(imagePath, {
+          rotateRadians: -Math.PI / 2,
+        });
+        candidates.push(counterclockwise.data);
+      }
     }
 
     const best = candidates.reduce((current, candidate) =>

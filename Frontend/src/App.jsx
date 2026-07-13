@@ -56,19 +56,19 @@ function App() {
         `${API_URL}/api/extract-id`,
         formData,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          timeout: 120000,
         }
       );
 
       setResult(res.data);
     } catch (error) {
-      const message =
-        error.response?.data?.message ||
+      const message = error.response?.data?.message ||
         error.response?.data?.error ||
-        error.message ||
-        "Something went wrong";
+        (error.code === "ECONNABORTED"
+          ? "Extraction timed out. Please try again with a smaller, clearer image."
+          : error.code === "ERR_NETWORK"
+            ? "Cannot reach the extraction server. Wait a moment and try again."
+            : error.message || "Something went wrong");
 
       setErrorMessage(message);
       alert(message);
