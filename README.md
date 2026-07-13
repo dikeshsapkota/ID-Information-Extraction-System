@@ -165,6 +165,48 @@ Runs on:
 http://localhost:5000
 ```
 
+## Authentication Setup
+
+The portal uses Auth0 Universal Login for individual user accounts. Each saved
+record is owned by the authenticated Auth0 user. The runtime admin access key is
+reserved for backend administration and must not be shared with users.
+
+### Auth0 Dashboard
+
+1. Create an Auth0 **API** using an identifier such as
+   `https://id-information-extraction-api` and the RS256 signing algorithm.
+2. Create an Auth0 **Single Page Application** for the React frontend.
+3. Add these URLs to Allowed Callback URLs, Allowed Logout URLs, and Allowed Web
+   Origins as applicable:
+   - `http://localhost:5173`
+   - `https://ai-id-extraction-system.netlify.app`
+
+### Backend Environment
+
+Add these private variables to `backend/.env` locally and to the Render service:
+
+```env
+AUTH0_AUDIENCE=https://id-information-extraction-api
+AUTH0_ISSUER_BASE_URL=https://your-tenant.auth0.com
+ADMIN_ACCESS_KEY=generate_a_long_random_private_value
+```
+
+### Frontend Environment
+
+Add these variables to `Frontend/.env` locally and to the Netlify site. The
+Auth0 domain, SPA client ID, and API audience are public identifiers, not secret
+credentials.
+
+```env
+VITE_API_URL=https://id-information-extraction-system.onrender.com
+VITE_AUTH0_DOMAIN=your-tenant.auth0.com
+VITE_AUTH0_CLIENT_ID=your_public_spa_client_id
+VITE_AUTH0_AUDIENCE=https://id-information-extraction-api
+```
+
+Never place `OPENAI_API_KEY`, `ADMIN_ACCESS_KEY`, an Auth0 client secret, or any
+other private credential in a `VITE_*` variable.
+
 ---
 
 ## API Endpoints
