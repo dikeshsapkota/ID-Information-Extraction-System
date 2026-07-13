@@ -4,6 +4,14 @@ const {
   extractFieldsFromOcr,
   extractNepaliIdFields,
 } = require("../services/aiExtractor");
+const { keysMatch } = require("../services/accessControl");
+
+test("compares access keys without accepting missing values", () => {
+  assert.equal(keysMatch("correct horse battery staple", "correct horse battery staple"), true);
+  assert.equal(keysMatch("wrong", "correct horse battery staple"), false);
+  assert.equal(keysMatch("", "correct horse battery staple"), false);
+  assert.equal(keysMatch("correct horse battery staple", ""), false);
+});
 
 test("extracts citizenship fields from English OCR labels", () => {
   const result = extractFieldsFromOcr(`

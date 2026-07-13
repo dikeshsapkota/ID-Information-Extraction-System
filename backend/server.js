@@ -5,6 +5,7 @@ const multer = require("multer");
 const path = require("path");
 const { preprocessImage } = require("./services/imageProcessor");
 const { recognizeText } = require("./services/ocrService");
+const { requireAccess } = require("./services/accessControl");
 const {
   extractNepaliIdFields,
 } = require("./services/aiExtractor");
@@ -44,7 +45,7 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
+app.post("/api/extract-id", requireAccess, upload.single("idImage"), async (req, res) => {
   let imagePath;
   let processedImage;
   let stage = "upload validation";
@@ -91,7 +92,7 @@ app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
   }
 });
 
-app.post("/api/citizens", (req, res) => {
+app.post("/api/citizens", requireAccess, (req, res) => {
   try {
     const { extractedText, fields } = req.body;
 
@@ -129,7 +130,7 @@ app.use((error, req, res, next) => {
   return next(error);
 });
 
-app.get("/api/citizens", (req, res) => {
+app.get("/api/citizens", requireAccess, (req, res) => {
   try {
     const rows = listCitizens();
     res.json(rows);

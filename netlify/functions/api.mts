@@ -1,4 +1,5 @@
 import type { Config } from "@netlify/functions";
+import { timingSafeEqual } from "node:crypto";
 import { desc } from "drizzle-orm";
 import Tesseract from "tesseract.js";
 import { join } from "node:path";
@@ -22,6 +23,21 @@ const json = (body: unknown, init?: ResponseInit) =>
       ...(init?.headers ?? {}),
     },
   });
+
+function isAuthorized(req: Request) {
+  const configuredKey = process.env.ADMIN_ACCESS_KEY;
+  const authorization = req.headers.get("authorization") ?? "";
+  const providedKey = authorization.startsWith("Bearer ")
+    ? authorization.slice(7)
+    : "";
+
+  if (!configuredKey || !providedKey) return false;
+  const configured = Buffer.from(configuredKey);
+  const provided = Buffer.from(providedKey);
+  return (
+    configured.length === provided.length && timingSafeEqual(configured, provided)
+  );
+}
 
 function extractFields(text: string): Fields {
   const idMatch = text.match(/\b\d{6,}\b/);
@@ -90,6 +106,17 @@ export default async (req: Request) => {
   const { pathname } = new URL(req.url);
 
   try {
+    if (!process.env.ADMIN_ACCESS_KEY) {
+      return json(
+        { message: "Server access protection is not configured" },
+        { status: 503 }
+      );
+    }
+
+    if (!isAuthorized(req)) {
+      return json({ message: "Invalid access key" }, { status: 401 });
+    }
+
     if (req.method === "POST" && pathname === "/api/extract-id") {
       return await extractId(req);
     }
