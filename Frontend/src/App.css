@@ -152,6 +152,17 @@ button:disabled {
   color: #475569;
 }
 
+.document-type {
+  display: inline-block;
+  margin: -6px 0 14px;
+  border-left: 3px solid #be123c;
+  background: #f1f5f9;
+  color: #172554;
+  padding: 7px 10px;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
 .details-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

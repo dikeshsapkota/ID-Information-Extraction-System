@@ -6,7 +6,7 @@ const path = require("path");
 const { preprocessImage } = require("./services/imageProcessor");
 const { recognizeText } = require("./services/ocrService");
 const {
-  extractNepaliCitizenshipFields,
+  extractNepaliIdFields,
 } = require("./services/aiExtractor");
 const {
   listCitizens,
@@ -26,6 +26,13 @@ const upload = multer({
   dest: uploadDir,
   limits: {
     fileSize: 5 * 1024 * 1024,
+  },
+  fileFilter: (req, file, callback) => {
+    const supportedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+    if (!supportedTypes.has(file.mimetype)) {
+      return callback(new Error("Unsupported file type. Upload a JPEG, PNG, or WebP image."));
+    }
+    return callback(null, true);
   },
 });
 
@@ -51,12 +58,17 @@ app.post("/api/extract-id", upload.single("idImage"), async (req, res) => {
 
     await preprocessImage(imagePath, processedImage);
     const fullText = await recognizeText(processedImage);
-    const fields = await extractNepaliCitizenshipFields(fullText);
+    const extraction = await extractNepaliIdFields(
+      fullText,
+      imagePath,
+      req.file.mimetype
+    );
 
     res.json({
       message: "ID extracted. Review the fields before saving.",
       extractedText: fullText,
-      fields,
+      documentType: extraction.document_type,
+      fields: extraction.fields,
     });
   } catch (error) {
     console.error("OCR error:", error);
@@ -101,6 +113,10 @@ app.use((error, req, res, next) => {
           ? "Image is too large. Please upload an image under 5MB."
           : error.message,
     });
+  }
+
+  if (error.message?.startsWith("Unsupported file type")) {
+    return res.status(400).json({ message: error.message });
   }
 
   return next(error);

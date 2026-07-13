@@ -16,6 +16,12 @@ const FIELD_LABELS = {
   municipality: "Municipality",
 };
 
+const DOCUMENT_LABELS = {
+  national_id: "National Identity Card",
+  citizenship: "Citizenship Certificate",
+  unknown: "Government ID",
+};
+
 function App() {
   const [image, setImage] = useState(null);
   const [result, setResult] = useState(null);
@@ -120,7 +126,7 @@ function App() {
             <span>ID document image</span>
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               onChange={(e) => setImage(e.target.files[0])}
             />
           </label>
@@ -135,6 +141,9 @@ function App() {
         {result && (
           <section className="result">
             <h2>Review Extracted Details</h2>
+            <p className="document-type">
+              {DOCUMENT_LABELS[result.documentType] || DOCUMENT_LABELS.unknown}
+            </p>
             <p className="review-note">
               Verify and edit every field before saving the citizen record.
             </p>
