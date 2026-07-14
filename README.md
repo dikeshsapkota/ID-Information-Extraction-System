@@ -1,127 +1,157 @@
-# AI Government ID Information Extraction System
+# 🪪 AI-Based ID Information Extraction System
 
-An AI-powered full-stack web application that extracts structured information from government-issued identity documents using Optical Character Recognition (OCR) and stores the extracted data securely in a backend database.
+<div align="center">
+
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react)
+![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite)
+![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js)
+![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?style=for-the-badge&logo=sqlite)
+![Tesseract OCR](https://img.shields.io/badge/Tesseract-OCR-green?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
+
+### Intelligent OCR-Powered Identity Document Information Extraction System
+
+Extract, process, and securely manage information from identity documents using **Artificial Intelligence**, **Optical Character Recognition (OCR)**, and a modern full-stack architecture.
+
+</div>
 
 ---
 
-## Overview
+# 📖 Overview
 
-The AI Government ID Information Extraction System automates the process of extracting information from identity documents such as citizenship certificates. Instead of manually entering citizen information, users upload an image of an ID document. The system processes the image using OCR, extracts relevant information, and stores the structured data in a database.
+The **AI-Based ID Information Extraction System** is a full-stack web application designed to automatically extract structured information from uploaded identity documents.
 
-This project demonstrates full-stack web development, REST API integration, OCR processing, backend development, and AI-assisted document analysis.
+Instead of manually entering personal information, users simply upload an image of an ID document, and the system intelligently processes it using OCR technology to identify important details such as:
+
+- Name
+- Date of Birth
+- Citizenship / ID Number
+- Address
+- Gender
+- Nationality
+- Other textual information
+
+The extracted information is then displayed in an organized format and stored securely in the database for future use.
+
+This project demonstrates practical implementation of **Artificial Intelligence**, **OCR**, **Computer Vision**, **Backend API Development**, and **Modern React Frontend Development**.
 
 ---
-
 ## Sample Preview
+
+
 
 ![AI Government ID Information Extraction System sample interface](docs/images/sample-frontend.png)
 
----
-## livedemo:https://ai-id-extraction-system.netlify.app/
 
-## Features
-
-- Upload government-issued identity documents
-- OCR-based text extraction using Tesseract.js
-- AI-assisted field extraction
-- Automatic detection of:
-  - Full Name
-  - Citizenship Number
-  - Date of Birth
-  - Gender
-  - District
-  - Municipality
-- Secure database storage
-- RESTful API architecture
-- Responsive React frontend
-- Backend validation and processing
 
 ---
+# 🚀 Features
 
-## System Architecture
+✅ Upload Identity Documents
 
-```text
-                 React Frontend
-                        |
-                        v
-                  Axios HTTP Client
-                        |
-                        v
-                 Express.js Backend
-                        |
-        +---------------+---------------+
-        v                               v
-   Multer File Upload             SQLite Database
-        |
-        v
-   Tesseract OCR Engine
-        |
-        v
- AI-assisted Data Extraction
-        |
-        v
- Structured Citizen Information
+✅ AI-Powered OCR Processing
+
+✅ Automatic Text Recognition
+
+✅ Intelligent Information Extraction
+
+✅ Structured Data Display
+
+✅ Secure Backend API
+
+✅ SQLite Database Integration
+
+✅ Responsive Modern UI
+
+✅ Fast Processing
+
+✅ REST API Architecture
+
+---
+
+# 🏗️ System Architecture
+
+```
+            User
+              │
+              ▼
+      React + Vite Frontend
+              │
+              ▼
+      Express REST API Server
+              │
+     Multer File Upload
+              │
+              ▼
+      Tesseract OCR Engine
+              │
+              ▼
+      Text Extraction Engine
+              │
+              ▼
+      Information Parser
+              │
+              ▼
+         SQLite Database
 ```
 
 ---
 
-## Technology Stack
+# 🛠 Tech Stack
 
-### Frontend
+## Frontend
 
 - React
 - Vite
+- CSS3
 - Axios
-- CSS
 
-### Backend
+## Backend
 
 - Node.js
 - Express.js
 - Multer
 - Tesseract.js
+- dotenv
 
-### Database
+## Database
 
 - SQLite
 
-### Development Tools
+## AI / OCR
 
-- Git
-- GitHub
-- Visual Studio Code
-- Netlify
-- Render
+- Tesseract OCR Engine
 
 ---
 
-## Project Structure
+# 📂 Project Structure
 
-```text
-ID-Information-Extraction-System/
+```
+AI-Based-ID-Information-Extraction-System/
 
+│
 ├── Frontend/
 │   ├── src/
 │   ├── public/
+│   ├── assets/
 │   ├── package.json
 │   └── vite.config.js
 │
 ├── backend/
+│   ├── uploads/
 │   ├── server.js
 │   ├── database.js
-│   ├── uploads/
 │   ├── package.json
 │   └── .env
 │
-├── README.md
-└── .gitignore
+└── README.md
 ```
 
 ---
 
-## Installation
+# ⚙️ Installation
 
-### Clone Repository
+## 1 Clone Repository
 
 ```bash
 git clone https://github.com/dikeshsapkota/ID-Information-Extraction-System.git
@@ -131,217 +161,216 @@ cd ID-Information-Extraction-System
 
 ---
 
-### Frontend
-
-```bash
-cd Frontend
-
-npm install
-
-npm run dev
-```
-
-Runs on:
-
-```text
-http://localhost:5173
-```
-
----
-
-### Backend
+## 2 Backend Setup
 
 ```bash
 cd backend
 
 npm install
+```
 
+Create a `.env`
+
+```env
+PORT=5000
+```
+
+Start backend
+
+```bash
 npm run dev
 ```
 
-Runs on:
+---
 
-```text
-http://localhost:5000
+## 3 Frontend Setup
+
+```bash
+cd Frontend
+
+npm install
 ```
 
-## Authentication Setup
-
-The portal uses Auth0 Universal Login for individual user accounts. Each saved
-record is owned by the authenticated Auth0 user. The runtime admin access key is
-reserved for backend administration and must not be shared with users.
-
-### Auth0 Dashboard
-
-1. Create an Auth0 **API** using an identifier such as
-   `https://id-information-extraction-api` and the RS256 signing algorithm.
-2. Create an Auth0 **Single Page Application** for the React frontend.
-3. Add these URLs to Allowed Callback URLs, Allowed Logout URLs, and Allowed Web
-   Origins as applicable:
-   - `http://localhost:5173`
-   - `https://ai-id-extraction-system.netlify.app`
-
-### Backend Environment
-
-Add these private variables to `backend/.env` locally and to the Render service:
+Create `.env`
 
 ```env
-AUTH0_AUDIENCE=https://id-information-extraction-api
-AUTH0_ISSUER_BASE_URL=https://your-tenant.auth0.com
-ADMIN_ACCESS_KEY=generate_a_long_random_private_value
+VITE_API_URL=http://localhost:5000
 ```
 
-### Frontend Environment
+Run
 
-Add these variables to `Frontend/.env` locally and to the Netlify site. The
-Auth0 domain, SPA client ID, and API audience are public identifiers, not secret
-credentials.
-
-```env
-VITE_API_URL=https://id-information-extraction-system.onrender.com
-VITE_AUTH0_DOMAIN=your-tenant.auth0.com
-VITE_AUTH0_CLIENT_ID=your_public_spa_client_id
-VITE_AUTH0_AUDIENCE=https://id-information-extraction-api
+```bash
+npm run dev
 ```
-
-Never place `OPENAI_API_KEY`, `ADMIN_ACCESS_KEY`, an Auth0 client secret, or any
-other private credential in a `VITE_*` variable.
 
 ---
 
-## API Endpoints
+# 🌐 Deployment
 
-### Extract ID Information
+## Frontend
 
-```http
+Deploy on
+
+- Netlify
+- Vercel
+
+Example Environment Variable
+
+```env
+VITE_API_URL=https://your-render-backend.onrender.com
+```
+
+---
+
+## Backend
+
+Deploy on
+
+- Render
+- Railway
+
+---
+
+# 📡 API Endpoint
+
+## Upload ID
+
+```
 POST /api/extract-id
 ```
 
-Uploads an identity document and returns structured extracted information.
+Form Data
 
----
-
-### Retrieve Citizens
-
-```http
-GET /api/citizens
+```
+idImage
 ```
 
-Returns all stored citizen records.
+Returns
 
----
-
-### Health Check
-
-```http
-GET /api/health
-```
-
-Returns the current backend service status.
-
----
-
-## Application Workflow
-
-```text
-Upload Identity Document
-            |
-            v
- OCR Text Extraction
-            |
-            v
- AI-assisted Data Parsing
-            |
-            v
- Structured Information
-            |
-            v
- User Review
-            |
-            v
- Database Storage
-            |
-            v
- Record Management
+```json
+{
+  "name": "John Doe",
+  "idNumber": "123456789",
+  "dateOfBirth": "2000-01-01",
+  "rawText": "..."
+}
 ```
 
 ---
 
-## Current Functionality
+# 🧠 OCR Workflow
 
-- Government ID upload
-- OCR text extraction
-- AI-assisted field detection
-- Structured data processing
-- Database storage
-- REST API
-- React frontend
-- Backend validation
+```
+Upload Image
+      │
+      ▼
+Store Temporarily
+      │
+      ▼
+Tesseract OCR
+      │
+      ▼
+Extract Raw Text
+      │
+      ▼
+Regex Processing
+      │
+      ▼
+Structured Information
+      │
+      ▼
+Database Storage
+      │
+      ▼
+Frontend Display
+```
 
 ---
 
-## Future Enhancements
+# 🔒 Security Features
 
-- JWT Authentication
-- Role-Based Access Control
-- Admin Dashboard
-- Search and Filtering
-- Edit and Delete Records
-- Multiple Document Support
-- Passport Recognition
-- Driving License Recognition
-- National ID Recognition
-- Confidence Scoring
-- AI-powered Structured Extraction
-- Image Preprocessing
-- Face Verification
-- PostgreSQL Integration
+- Environment Variables
+- Secure API Communication
+- File Upload Validation
+- Temporary File Handling
+- Backend Data Processing
+- Database Storage
+
+---
+
+# 🎯 Future Improvements
+
+- AI Model for Better Recognition
+- Passport Support
+- Driving License Support
+- Citizenship Support
+- Aadhaar Support
+- PAN Card Support
+- Face Detection
+- QR Code Reading
+- Multi-language OCR
+- PDF Upload
+- User Authentication (Auth0/JWT)
 - Cloud Storage
-- Audit Logs
-- PDF Report Generation
+- OCR Accuracy Improvements
+- Export to PDF
+- Export to Excel
+- Admin Dashboard
 - Analytics Dashboard
 
 ---
 
-## Deployment
+# 📚 Learning Outcomes
 
-### Frontend
+This project demonstrates practical knowledge of:
 
-Netlify
-
-### Backend
-
-Render
-
----
-
-## Challenges
-
-- OCR accuracy depends on image quality.
-- Different document layouts require flexible extraction logic.
-- AI-assisted parsing improves extraction reliability compared to fixed regular expressions.
-- Secure handling of uploaded identity documents is essential.
+- Artificial Intelligence Integration
+- Optical Character Recognition (OCR)
+- React Development
+- Express Backend Development
+- REST API Design
+- Database Integration
+- File Upload Handling
+- Environment Variables
+- Full Stack Development
+- Deployment using Netlify & Render
 
 ---
 
-## Future Scope
+# 👨‍💻 Author
 
-The project is intended to evolve into a comprehensive government-style identity verification platform capable of supporting multiple document types, intelligent document classification, AI-powered field extraction, administrative management, authentication, reporting, and cloud deployment.
+## Dikesh Sapkota
+
+🎓 BSc CSIT Student
+
+💻 Aspiring Full Stack Developer
+
+🌐 GitHub
+
+https://github.com/dikeshsapkota
+
+LinkedIn
+
+https://www.linkedin.com/in/dikesh-sapkota-430831316/
 
 ---
 
-## Author
+# ⭐ Support
 
-**Dikesh Sapkota**
-
-Bachelor of Science in Computer Science and Information Technology (BSc CSIT)
-
-GitHub: https://github.com/dikeshsapkota
-
-LinkedIn: https://www.linkedin.com/in/dikesh-sapkota-430831316/
+If you found this project helpful, consider giving it a ⭐ on GitHub.
 
 ---
 
-## License
+# 📄 License
 
 This project is licensed under the MIT License.
+
+---
+
+<div align="center">
+
+### ⭐ Built with React, Node.js, SQLite and Tesseract OCR ⭐
+
+**Thank you for visiting this repository!**
+
+</div>
