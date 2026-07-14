@@ -67,6 +67,23 @@ function extractUppercaseName(text) {
   return NOT_DETECTED;
 }
 
+function extractLabeledName(text) {
+  const lines = text.split("\n").map((line) => line.trim());
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const labelMatch = lines[index].match(
+      /^(?:full\s*name|name)\b\s*(?:[:;-]\s*)?(.*)$/i
+    );
+    if (!labelMatch) continue;
+
+    const sameLineValue = labelMatch[1].trim();
+    const candidate = sameLineValue || lines[index + 1] || "";
+    if (/^[A-Za-z][A-Za-z .'-]{2,}$/.test(candidate)) return candidate;
+  }
+
+  return NOT_DETECTED;
+}
+
 function extractFieldsFromOcr(ocrText) {
   const text = normalizeDigits(ocrText);
   const isNationalId = /national\s+(?:identity|identification)|\bnin\b|\bnidin\b/i.test(text);
@@ -87,9 +104,7 @@ function extractFieldsFromOcr(ocrText) {
     /\bnin\b[\s\S]{0,80}?([0-9][0-9 -]{7,})/i,
   ]);
 
-  const labeledName = firstMatch(text, [
-    /(?:full\s+name|name)\s*[:;-]\s*([A-Za-z][A-Za-z .'-]{3,})/i,
-  ]);
+  const labeledName = extractLabeledName(text);
   const name = labeledName === NOT_DETECTED ? extractUppercaseName(text) : labeledName;
   const dob = firstMatch(text, [
     /date\s+of\s+birth[^\n]*?((?:19|20)\d{2}[-/][0-1]?\d[-/][0-3]?\d)/i,

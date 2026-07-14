@@ -69,6 +69,23 @@ test("normalizes Devanagari digits in national identification numbers", () => {
   assert.equal(result.fields.name, "Example Person");
 });
 
+test("extracts a full name printed on the line after its OCR label", () => {
+  const result = extractFieldsFromOcr(`
+    GOVERNMENT OF NEPAL
+    Full Name
+    DIKESH SAPKOTA
+    Date of Birth: 2005-02-22
+  `);
+
+  assert.equal(result.fields.name, "DIKESH SAPKOTA");
+});
+
+test("extracts a full name when OCR misses the label separator", () => {
+  const result = extractFieldsFromOcr("Full Name Dikesh Sapkota");
+
+  assert.equal(result.fields.name, "Dikesh Sapkota");
+});
+
 test("extracts national ID address from the compact card format", () => {
   const result = extractFieldsFromOcr(`
     Damak Municipality-2 Jhapa

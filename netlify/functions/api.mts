@@ -51,8 +51,22 @@ function extractFields(text: string): Fields {
     .map((line) => line.trim())
     .filter(Boolean);
 
+  let detectedName = "Not detected";
+  for (let index = 0; index < lines.length; index += 1) {
+    const labelMatch = lines[index].match(
+      /^(?:full\s*name|name)\b\s*(?:[:;-]\s*)?(.*)$/i,
+    );
+    if (!labelMatch) continue;
+
+    const candidate = labelMatch[1].trim() || lines[index + 1] || "";
+    if (/^[A-Za-z][A-Za-z .'-]{2,}$/.test(candidate)) {
+      detectedName = candidate;
+      break;
+    }
+  }
+
   return {
-    name: lines[0] || "Not detected",
+    name: detectedName,
     id_number: idMatch ? idMatch[0] : "Not detected",
     dob: dobMatch ? dobMatch[0] : "Not detected",
     gender: genderMatch ? genderMatch[1] : "Not detected",
